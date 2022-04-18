@@ -1,0 +1,17 @@
+### Atmel Studio ###
+
+.vs/
+
+[Dd]ebug/
+[Rr]elease/
+
+*.o
+*.d
+*.elf
+*.hex
+*.map
+*.sr
+
+*.atsln
+*.cproj
+*.componentinfo.xml
