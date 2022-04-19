@@ -21,6 +21,8 @@
 #define DQ_PIN		(6)
 
 
+#define PARASITIC_PWR	0
+
                                                                                                                                                                         
 /** ______ ________  ___                           _
 	| ___ |  _  |  \/  |                          | |
@@ -118,5 +120,6 @@ void write_dq_command(uint8_t);
 void read_scratch_pad(ds18b20_t *);
 void read_rom_address(ds18b20_t *);
 void read_temperature(ds18b20_t *);
+uint8_t check_power_mode();
 
 #endif /* DS18B20_H_ */

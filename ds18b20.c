@@ -15,6 +15,7 @@ void pull_dq_bus_low(){
 
 void release_dq_bus() {
 	DQ_DDR &= ~(1<<DQ_PIN);
+	//DQ_PORT |= (1<<DQ_PIN);
 }
 
  uint8_t read_dq_bus_level(){
@@ -46,9 +47,9 @@ void release_dq_bus() {
  
  void write_zero_to_dq_bus(){
 	 pull_dq_bus_low();
-	 _delay_us(65);
+	 _delay_us(80);
 	 release_dq_bus();
-	 _delay_us(10);
+	 _delay_us(2);
  }
  
  uint8_t read_bit_from_dq_bus() {
@@ -137,27 +138,27 @@ void read_temperature(ds18b20_t *dev) {
 	
 	rst_check_dq_bus_for_device();
 	write_dq_command(SKIP_ROM);
-	//write_address(&dev);
-	//write_byte_to_dq_bus(dev->address.byte1);
-	//write_byte_to_dq_bus(dev->address.byte2);
-	//write_byte_to_dq_bus(dev->address.byte3);
-	//write_byte_to_dq_bus(dev->address.byte4);
-	//write_byte_to_dq_bus(dev->address.byte5);
-	//write_byte_to_dq_bus(dev->address.byte6);
-	//write_byte_to_dq_bus(dev->address.byte7);
-	//write_byte_to_dq_bus(dev->address.byte8);
 	write_dq_command(CONVERT_TEMP);
+
+	if(check_power_mode() == PARASITIC_PWR) {
+		DQ_DDR |= (1<<DQ_PIN);
+		DQ_PORT |= (1<<DQ_PIN);
+		_delay_ms(750);
+		DQ_DDR &= ~(1<<DQ_PIN);
+		} else {
+		while(!read_bit_from_dq_bus());
+	}
 	
-	_delay_ms(10);
-	while(!read_bit_from_dq_bus());
 	
-	//read_scratch_pad(&dev);
-	dev->scratch_pad.temperature_lsb			= read_byte_from_dq_bus();
-	dev->scratch_pad.temperature_msb			= read_byte_from_dq_bus();
-	dev->scratch_pad.t_high_user_byte			= read_byte_from_dq_bus();
-	dev->scratch_pad.conf_reg.conf_reg_uint8	= read_byte_from_dq_bus();
-	dev->scratch_pad.reserved1					= read_byte_from_dq_bus();
-	dev->scratch_pad.reserved2					= read_byte_from_dq_bus();
-	dev->scratch_pad.reserved3					= read_byte_from_dq_bus();
-	dev->scratch_pad.crc_reg					= read_byte_from_dq_bus();
+	rst_check_dq_bus_for_device();
+	write_dq_command(SKIP_ROM);
+
+	read_scratch_pad(&dev);
+}
+
+uint8_t check_power_mode() {
+	rst_check_dq_bus_for_device();
+	write_dq_command(SKIP_ROM);
+	write_dq_command(READ_PWR_SUPPLY);
+	return read_bit_from_dq_bus();
 }

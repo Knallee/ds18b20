@@ -23,9 +23,13 @@ volatile uint8_t enc_a, enc_b, enc_flag;
 volatile int16_t enc_dir, enc_cnt, enc_cnt_old;
 char buf[10];
 
+uint16_t temperature;
+
 uint8_t device_found;
 
 ds18b20_t sensor1;
+
+uint8_t power_mode;
 
 int main(void)
 {
@@ -65,10 +69,25 @@ int main(void)
     while (1) {	
 		//rst_check_dq_bus_for_device();
 		//_delay_us(30);
+
 		read_temperature(&sensor1);
-		//write_dq_command(SKIP_ROM);
-		//read_scratch_pad(&sensor1);
-		_delay_ms(20);
+
+	
+		
+		//while(!read_bit_from_dq_bus());
+		rst_check_dq_bus_for_device();
+		write_dq_command(SKIP_ROM);
+		read_scratch_pad(&sensor1);
+		
+		temperature = (sensor1.scratch_pad.temperature_msb << 4) | (sensor1.scratch_pad.temperature_lsb >> 4);
+
+		
+		rst_check_dq_bus_for_device();
+		power_mode = check_power_mode();
+		
+
+
+		
 		//if(enc_flag == 1) {
  			//enc_flag = 0;
  			//lcd_commmand(0b00000001);		// Clear display
