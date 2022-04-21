@@ -27,63 +27,69 @@ uint16_t temperature;
 
 uint8_t device_found;
 
-ds18b20_t sensor1;
+ds18b20_t sensor1, sensor2;
 
 uint8_t power_mode;
 
+
 int main(void)
 {
-	//ext_int1_init();
 	
 	pin_change_init();
 	lcd_init();
 	
 	device_found = rst_check_dq_bus_for_device();
 	
-	read_rom_address(&sensor1);
+	sensor1.address.byte8 = 0xe5;
+	sensor1.address.byte7 = 0x00;
+	sensor1.address.byte6 = 0x00;
+	sensor1.address.byte5 = 0x0d;
+	sensor1.address.byte4 = 0x7b;
+	sensor1.address.byte3 = 0xbf;
+	sensor1.address.byte2 = 0xf7;
+	sensor1.address.byte1 = 0x28;
 	
-	if(device_found && (sensor1.address.byte1 == 0x28)) {
+	sensor2.address.byte8 = 0x8c;
+	sensor2.address.byte7 = 0x00;
+	sensor2.address.byte6 = 0x00;
+	sensor2.address.byte5 = 0x0d;
+	sensor2.address.byte4 = 0x7b;
+	sensor2.address.byte3 = 0x34;
+	sensor2.address.byte2 = 0x8a;
+	sensor2.address.byte1 = 0x28;
+	
+	if(device_found) {
 		lcd_home();
-		lcd_put_string("Found a DS18B20");
+		lcd_put_string("Found a device");
 	} else {
 		lcd_home();
 		lcd_put_string("No device found");
 	}
 	
+	char addr[3];	
+	
+	DDRA |= (1 << DDRA0);
+	
+	_delay_ms(2000);
+	lcd_clear_and_home();
 	second_row();
 	
-	char addr[3];
-	
-	lcd_put_string("0x");
-	lcd_put_string(itoa(sensor1.address.byte8, addr, 16));
-	lcd_put_string(itoa(sensor1.address.byte7, addr, 16));
-	lcd_put_string(itoa(sensor1.address.byte6, addr, 16));
-	lcd_put_string(itoa(sensor1.address.byte5, addr, 16));
-	lcd_put_string(itoa(sensor1.address.byte4, addr, 16));
-	lcd_put_string(itoa(sensor1.address.byte3, addr, 16));
-	lcd_put_string(itoa(sensor1.address.byte2, addr, 16));
-	lcd_put_string(itoa(sensor1.address.byte1, addr, 16));
-	
 	sei();
-    /* Replace with your application code */
+
     while (1) {	
-		//rst_check_dq_bus_for_device();
-		//_delay_us(30);
 
-		read_temperature(&sensor1);
 
-	
-		
-		//while(!read_bit_from_dq_bus());
-		rst_check_dq_bus_for_device();
-		write_dq_command(SKIP_ROM);
-		read_scratch_pad(&sensor1);
-		
+		lcd_home();
+		match_rom_read_temperature(&sensor1);
 		temperature = (sensor1.scratch_pad.temperature_msb << 4) | (sensor1.scratch_pad.temperature_lsb >> 4);
+		lcd_put_string(itoa(temperature, addr, 10));
 
-		
-		rst_check_dq_bus_for_device();
-		power_mode = check_power_mode();
+
+		second_row();
+		match_rom_read_temperature(&sensor2);	
+		temperature = (sensor2.scratch_pad.temperature_msb << 4) | (sensor2.scratch_pad.temperature_lsb >> 4);
+		lcd_put_string(itoa(temperature, addr, 10));
+		//_delay_ms(1);
 		
 
 
@@ -114,14 +120,6 @@ void ext_int1_init(){
 	EIMSK	|= (1 << INT1);
 }
 
-
-ISR(TIMER0_OVF_vect) {
-	timer0_ovf_cnt++;
-	if (timer0_ovf_cnt == time) {
-		times_up = 0;
-	}
-
-}
 
 ISR(PCINT3_vect) {
 	enc_flag = 1;

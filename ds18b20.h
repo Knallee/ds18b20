@@ -119,7 +119,8 @@ uint8_t read_byte_from_dq_bus(void);
 void write_dq_command(uint8_t);
 void read_scratch_pad(ds18b20_t *);
 void read_rom_address(ds18b20_t *);
-void read_temperature(ds18b20_t *);
+void skip_rom_read_temperature(ds18b20_t *);
 uint8_t check_power_mode();
+void match_rom_read_temperature(ds18b20_t *dev);
 
 #endif /* DS18B20_H_ */
